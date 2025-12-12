@@ -1,0 +1,7 @@
+{
+  "name": "Copy 3 of Unified AI Communication Platform",
+  "description": "A modern landing page for an AI system that converts voice input into complete event communication packages.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
