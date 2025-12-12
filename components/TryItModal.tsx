@@ -121,10 +121,10 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
         
         let parsedData: GeneratedAssets;
         try {
-            parsedData = JSON.parse(textResponse.text);
+            parsedData = JSON.parse(textResponse.text ?? "{}");
         } catch (e) {
             console.error("JSON Parse Error", e);
-            const cleanText = textResponse.text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const cleanText = (textResponse.text ?? "").replace(/```json/g, '').replace(/```/g, '').trim();
             parsedData = JSON.parse(cleanText);
         }
         
@@ -225,7 +225,7 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
                 }
             });
             if (response.text) {
-                setTextInput(prev => (prev ? prev + ' ' : '') + response.text.trim());
+                setTextInput(prev => (prev ? prev + ' ' : '') + (response.text ?? "").trim());
             }
             setIsTranscribing(false);
         };
