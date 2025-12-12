@@ -45,8 +45,8 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
 
   const handleGenerate = async () => {
     if (!textInput.trim()) return;
-    if (!process.env.API_KEY) {
-        alert("API Key is missing. Please ensure process.env.API_KEY is available.");
+    if (!import.meta.env.VITE_API_KEY) {
+        alert("API Key is missing. Please ensure VITE_API_KEY is available in your .env file.");
         return;
     }
 
@@ -54,7 +54,7 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
     setResults(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
         
         // 1. Configure Schema for Strict JSON Output
         const jsonSchema: Schema = {
@@ -214,7 +214,7 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
             const base64String = reader.result as string;
             const base64Data = base64String.split(',')[1];
             const mimeType = base64String.split(';')[0].split(':')[1];
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: {
