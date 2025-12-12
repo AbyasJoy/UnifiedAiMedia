@@ -12,6 +12,7 @@ export default async function handler(
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Ensure VITE_API_KEY is available in the environment
   const apiKey = process.env.VITE_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Server API key missing' });
@@ -21,7 +22,7 @@ export default async function handler(
     const { prompt, aspectRatio } = req.body;
     const ai = new GoogleGenAI({ apiKey });
 
-    // Use the correct model for image generation (Nano Banana / Gemini Flash Image)
+    // Use the correct model and config for the @google/genai SDK
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: { parts: [{ text: prompt }] },
@@ -37,8 +38,7 @@ export default async function handler(
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData && part.inlineData.data) {
-          // Correctly formatted template literal with backticks
-          imageBase64 = `data:image/png;base64,${part.inlineData.data}`;
+          imageBase64 = part.inlineData.data;
           break;
         }
       }
@@ -48,7 +48,10 @@ export default async function handler(
       throw new Error("No image data returned from Gemini");
     }
 
-    return res.status(200).json({ image: imageBase64 });
+    // Construct the data URL using a template literal
+    const finalImage = `data:image/png;base64,${imageBase64}`;
+
+    return res.status(200).json({ image: finalImage });
 
   } catch (error: any) {
     console.error("Image Generation Error:", error);
