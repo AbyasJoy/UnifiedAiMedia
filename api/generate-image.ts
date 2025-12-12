@@ -1,7 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(
+  req: { method: string; body: any; query: any },
+  res: { status: (code: number) => any; json: (data: any) => void }
+) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
