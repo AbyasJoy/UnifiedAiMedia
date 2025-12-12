@@ -1,14 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Force Node.js runtime (REQUIRED for Vercel)
+// Force Node.js runtime on Vercel
 export const config = {
   runtime: "nodejs"
 };
 
-export default async function handler(
-  req: { method: string; body: any; query: any },
-  res: { status: (code: number) => any; json: (data: any) => void }
-) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -20,6 +17,7 @@ export default async function handler(
 
   try {
     const { prompt, aspectRatio } = req.body;
+
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
@@ -36,7 +34,7 @@ export default async function handler(
       }
     });
 
-    let imageBase64 = undefined;
+    let imageBase64;
 
     const parts = response?.candidates?.[0]?.content?.parts || [];
     for (const part of parts) {
@@ -52,7 +50,7 @@ export default async function handler(
 
     return res.status(200).json({ image: imageBase64 });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Image Generation Error:", error);
     return res.status(500).json({ error: error.message || "Failed to generate image" });
   }
