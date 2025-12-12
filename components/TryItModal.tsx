@@ -45,7 +45,10 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
 
   const handleGenerate = async () => {
     if (!textInput.trim()) return;
-    if (!import.meta.env.VITE_API_KEY) {
+    
+    // Check for API key using correct Vite syntax
+    const apiKey = import.meta.env.VITE_API_KEY;
+    if (!apiKey) {
         alert("API Key is missing. Please ensure VITE_API_KEY is available in your .env file.");
         return;
     }
@@ -54,7 +57,7 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
     setResults(null);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         
         // 1. Configure Schema for Strict JSON Output
         const jsonSchema: Schema = {
@@ -128,23 +131,21 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
             parsedData = JSON.parse(cleanText);
         }
         
-        // 2. Generate Images in Parallel (Poster & Social Image)
+        // 2. Generate Images via Server API (Avoids CORS/Env issues)
         const generateImage = async (prompt: string, aspectRatio: "3:4" | "1:1") => {
             try {
-                const imageResponse = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash-image',
-                    contents: { parts: [{ text: prompt }] },
-                    config: {
-                        imageConfig: { aspectRatio: aspectRatio }
-                    }
+                const response = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, aspectRatio })
                 });
-                if (imageResponse.candidates?.[0]?.content?.parts) {
-                    for (const part of imageResponse.candidates[0].content.parts) {
-                        if (part.inlineData && part.inlineData.data) {
-                            return `data:image/png;base64,${part.inlineData.data}`;
-                        }
-                    }
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
                 }
+
+                const data = await response.json();
+                return data.image; // Returns base64 string
             } catch (error) {
                 console.error(`Image generation failed for ${aspectRatio}`, error);
             }
@@ -214,7 +215,13 @@ export const UnifiedGeneratorModal: React.FC<TryItModalProps> = ({ isOpen, onClo
             const base64String = reader.result as string;
             const base64Data = base64String.split(',')[1];
             const mimeType = base64String.split(';')[0].split(':')[1];
-            const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
+            const apiKey = import.meta.env.VITE_API_KEY;
+            if (!apiKey) {
+                console.error("API Key missing");
+                setIsTranscribing(false);
+                return;
+            }
+            const ai = new GoogleGenAI({ apiKey });
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: {
